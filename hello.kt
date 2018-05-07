@@ -48,13 +48,28 @@ fun globalReference(){
 fun freezeLocal(){
     val worker = startWorker()
 
-    val localData = SomeData("asdf 👍")
+    val localData = SomeData("asdf")
+    localData.freeze()
+
+    val future = worker.schedule(TransferMode.CHECKED, { localData }) {
+        println("In thread ${it.a}")
+    }
+    println("In main ${localData.a}")
+
+    future.consume {  }
+
+    println("In main ${localData.a}")
+
+    worker.requestTermination()
+}
+
+fun uncheckedLocal(){
+    val worker = startWorker()
+
+    val localData = SomeData("asdf")
 
     val future = worker.schedule(TransferMode.UNCHECKED, { localData }) {
-        for (i in 0..1000000) {
-            if(i%10000 == 0)
-            println("In thread ${it.a}/$i")
-        }
+        println("In thread ${it.a}")
     }
     println("In main ${localData.a}")
 
@@ -72,7 +87,11 @@ fun twoWorkers(){
     val a = startWorker().freeze()
     val b = startWorker().freeze()
 
-    a.schedule(TransferMode.CHECKED, {b}){
-
-    }
+    a.schedule(TransferMode.CHECKED, {arrayOf(a, b)}){
+        it[1].schedule(TransferMode.CHECKED, {it[0]}){
+            print("Hello!")
+        }
+    }.consume {  }
+    a.requestTermination()
+    b.requestTermination()
 }
