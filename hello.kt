@@ -4,7 +4,7 @@ import konan.worker.startWorker
 import platform.darwin.glob
 
 fun main(args: Array<String>) {
-    freezeLocal()
+    globalReference()
 }
 
 fun simpleWorker(){
@@ -16,6 +16,20 @@ fun simpleWorker(){
 
     worker.requestTermination()
 }
+
+/*val worker = startWorker()
+
+fun doNotDoThis(){
+    worker.schedule(TransferMode.CHECKED, {}){
+        for(i in 0..1000000)
+        {
+            //Let's kill time
+            val b = (i+i).toDouble()/1000.toDouble()
+        }
+    }.consume {  }
+
+    worker.requestTermination()
+}*/
 
 fun failedReference(){
     val worker = startWorker()
@@ -80,7 +94,11 @@ fun uncheckedLocal(){
     worker.requestTermination()
 }
 
-class SomeData(val a:String)
+class SomeData(val a:String){
+    init {
+        println("init SomeData $a")
+    }
+}
 
 
 fun twoWorkers(){
